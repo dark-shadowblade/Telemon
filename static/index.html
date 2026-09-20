@@ -1,146 +1,957 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Telegram Activity Monitor</title>
+<title>Telemon — Telegram Activity Monitor</title>
+
 <style>
-body{margin:0;background:#07090d;color:#f2f4f7;font:15px Arial}
-main{max-width:900px;margin:auto;padding:25px 15px}
-.card{background:#10141b;border:1px solid #222a35;border-radius:15px;padding:18px;margin:12px 0}
-input,button{width:100%;padding:12px;margin-top:7px;border-radius:9px;border:1px solid #303947;background:#0b0f15;color:white;box-sizing:border-box}
-button{background:#176ea8;cursor:pointer}
-.item{padding:13px;margin:7px 0;background:#0b0f15;border-radius:10px;cursor:pointer}
-.small{color:#8993a1;font-size:12px}
-.online{color:#27e27b}.offline{color:#ff4f5c}
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#07090d;
+    color:#f2f4f7;
+    font:15px Arial,Segoe UI,sans-serif;
+}
+
+main{
+    max-width:900px;
+    margin:auto;
+    padding:28px 15px 60px;
+}
+
+h1{
+    margin:0;
+    font-size:32px;
+}
+
+h3{
+    margin-top:0;
+}
+
+.small{
+    color:#8993a1;
+    font-size:12px;
+}
+
+.card{
+    background:#10141b;
+    border:1px solid #222a35;
+    border-radius:15px;
+    padding:20px;
+    margin:14px 0;
+}
+
+input,
+button{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    border-radius:9px;
+    border:1px solid #303947;
+    background:#0b0f15;
+    color:white;
+    box-sizing:border-box;
+}
+
+input:focus{
+    outline:none;
+    border-color:#2ea6ff;
+}
+
+button{
+    background:#176ea8;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+}
+
+button:hover{
+    background:#2186c8;
+}
+
+.item{
+    padding:14px;
+    margin:8px 0;
+    background:#0b0f15;
+    border:1px solid #202833;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.item:hover{
+    background:#121923;
+}
+
+.online{
+    color:#27e27b;
+}
+
+.offline{
+    color:#ff4f5c;
+}
+
+.msg{
+    margin-top:10px;
+}
+
+.hidden{
+    display:none;
+}
+
+.status{
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+.activity{
+    max-height:500px;
+    overflow-y:auto;
+}
+
+hr{
+    border:0;
+    border-top:1px solid #222a35;
+    margin:18px 0;
+}
 </style>
 </head>
+
 <body>
+
 <main>
-<h1>Telegram Activity Monitor</h1>
-<p class="small">Uses only activity visible to the authorized Telegram account.</p>
+
+<h1>Telemon</h1>
+
+<p class="small">
+Telegram Activity Monitor
+</p>
+
+
+<!-- =================================================
+     LOGIN
+================================================== -->
 
 <div class="card">
-<h3>Telegram Login</h3>
-<input id="phone" placeholder="+91XXXXXXXXXX">
-<button onclick="startLogin()">Send Code</button>
-<div id="login2" style="display:none">
-<input id="code" placeholder="Telegram code">
-<input id="password" type="password" placeholder="2FA password (if enabled)">
-<button onclick="finishLogin()">Login</button>
-</div>
-<p id="loginMsg" class="small"></p>
+
+<h3>Connect Telegram</h3>
+
+<p class="small">
+Enter the API credentials belonging to the Telegram account
+you want to connect.
+</p>
+
+
+<input
+    id="apiId"
+    type="number"
+    placeholder="API ID"
+>
+
+
+<input
+    id="apiHash"
+    type="password"
+    placeholder="API Hash"
+>
+
+
+<input
+    id="phone"
+    type="tel"
+    placeholder="+91XXXXXXXXXX"
+>
+
+
+<button
+    onclick="startLogin()"
+>
+Send Telegram Code
+</button>
+
+
+<div
+    id="login2"
+    class="hidden"
+>
+
+<hr>
+
+<input
+    id="code"
+    placeholder="Telegram login code"
+>
+
+
+<input
+    id="password"
+    type="password"
+    placeholder="2FA password (if enabled)"
+>
+
+
+<button
+    onclick="finishLogin()"
+>
+Login
+</button>
+
 </div>
 
-<div class="card">
-<h3>Add Target</h3>
-<input id="target" placeholder="@username or Telegram ID">
-<button onclick="addTarget()">Add Target</button>
-<p id="targetMsg" class="small"></p>
+
+<p
+    id="loginMsg"
+    class="small msg"
+></p>
+
 </div>
 
-<div class="card">
-<h3>Targets</h3>
-<div id="targets">Login first.</div>
+
+<!-- =================================================
+     ADD TARGET
+================================================== -->
+
+<div
+    id="targetCard"
+    class="card hidden"
+>
+
+<h3>Add Person to Monitor</h3>
+
+<p class="small">
+Enter a Telegram username or numeric Telegram ID.
+</p>
+
+
+<input
+    id="target"
+    placeholder="@username or Telegram ID"
+>
+
+
+<button
+    onclick="addTarget()"
+>
+Add Target
+</button>
+
+
+<p
+    id="targetMsg"
+    class="small msg"
+></p>
+
 </div>
 
-<div class="card">
-<h3>Activity</h3>
-<div id="activity">Select a target.</div>
+
+<!-- =================================================
+     TARGETS
+================================================== -->
+
+<div
+    id="targetsCard"
+    class="card hidden"
+>
+
+<h3>Monitored People</h3>
+
+<div id="targets"></div>
+
 </div>
+
+
+<!-- =================================================
+     ACTIVITY
+================================================== -->
+
+<div
+    id="activityCard"
+    class="card hidden"
+>
+
+<h3 id="activityTitle">
+Activity
+</h3>
+
+<div
+    id="activity"
+    class="activity"
+>
+Select a target.
+</div>
+
+</div>
+
+
 </main>
 
+
 <script>
-let loginId=null,accountId=null,selected=null;
 
-async function api(url,opt={}){
- const r=await fetch(url,{cache:"no-store",...opt,
-   headers:{"Content-Type":"application/json",...(opt.headers||{})}});
- const text=await r.text();
- let d; try{d=JSON.parse(text)}catch{d={detail:text}}
- if(!r.ok)throw Error(d.detail||"Request failed");
- return d;
+let loginId = null;
+let accountId = null;
+let selected = null;
+
+
+/* =================================================
+   API HELPER
+================================================= */
+
+async function api(url, options = {}) {
+
+    const response = await fetch(
+        url,
+        {
+            cache: "no-store",
+
+            ...options,
+
+            headers: {
+                "Content-Type":
+                    "application/json",
+
+                ...(options.headers || {})
+            }
+        }
+    );
+
+
+    const text =
+        await response.text();
+
+
+    let data;
+
+
+    try {
+
+        data =
+            JSON.parse(text);
+
+    } catch {
+
+        data = {
+            detail: text
+        };
+
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.detail ||
+            "Request failed"
+        );
+
+    }
+
+
+    return data;
+
 }
 
-async function startLogin(){
- try{
-  const d=await api("/api/login/start",{method:"POST",
-   body:JSON.stringify({phone:phone.value.trim()})});
-  loginId=d.login_id;
-  login2.style.display="block";
-  loginMsg.textContent=d.message;
- }catch(e){loginMsg.textContent=e.message}
+
+/* =================================================
+   START LOGIN
+================================================= */
+
+async function startLogin() {
+
+    const apiId =
+        document.getElementById(
+            "apiId"
+        ).value.trim();
+
+
+    const apiHash =
+        document.getElementById(
+            "apiHash"
+        ).value.trim();
+
+
+    const phone =
+        document.getElementById(
+            "phone"
+        ).value.trim();
+
+
+    const msg =
+        document.getElementById(
+            "loginMsg"
+        );
+
+
+    if (!apiId) {
+
+        msg.textContent =
+            "Enter your API ID.";
+
+        return;
+
+    }
+
+
+    if (!apiHash) {
+
+        msg.textContent =
+            "Enter your API Hash.";
+
+        return;
+
+    }
+
+
+    if (!phone) {
+
+        msg.textContent =
+            "Enter your phone number.";
+
+        return;
+
+    }
+
+
+    try {
+
+        msg.textContent =
+            "Sending Telegram code...";
+
+
+        const data =
+            await api(
+                "/api/login/start",
+                {
+                    method: "POST",
+
+                    body: JSON.stringify({
+
+                        api_id:
+                            Number(apiId),
+
+                        api_hash:
+                            apiHash,
+
+                        phone:
+                            phone
+
+                    })
+                }
+            );
+
+
+        loginId =
+            data.login_id;
+
+
+        document.getElementById(
+            "login2"
+        ).classList.remove(
+            "hidden"
+        );
+
+
+        msg.textContent =
+            data.message;
+
+
+    } catch (error) {
+
+        msg.textContent =
+            error.message;
+
+    }
+
 }
 
-async function finishLogin(){
- try{
-  const d=await api("/api/login/finish",{method:"POST",
-   body:JSON.stringify({
-    login_id:loginId,
-    code:code.value.trim(),
-    password:password.value
-   })});
-  if(d.needs_password){
-   loginMsg.textContent="Enter your 2FA password.";
-   return;
-  }
-  accountId=d.account_id;
-  loginMsg.textContent="Logged in: "+d.name;
-  loadTargets();
- }catch(e){loginMsg.textContent=e.message}
+
+/* =================================================
+   FINISH LOGIN
+================================================= */
+
+async function finishLogin() {
+
+    const code =
+        document.getElementById(
+            "code"
+        ).value.trim();
+
+
+    const password =
+        document.getElementById(
+            "password"
+        ).value;
+
+
+    const msg =
+        document.getElementById(
+            "loginMsg"
+        );
+
+
+    if (!code) {
+
+        msg.textContent =
+            "Enter the Telegram code.";
+
+        return;
+
+    }
+
+
+    try {
+
+        msg.textContent =
+            "Logging in...";
+
+
+        const data =
+            await api(
+                "/api/login/finish",
+                {
+                    method: "POST",
+
+                    body: JSON.stringify({
+
+                        login_id:
+                            loginId,
+
+                        code:
+                            code,
+
+                        password:
+                            password
+
+                    })
+                }
+            );
+
+
+        if (data.needs_password) {
+
+            msg.textContent =
+                "Enter your Telegram 2FA password.";
+
+            return;
+
+        }
+
+
+        accountId =
+            data.account_id;
+
+
+        msg.textContent =
+            "Logged in as " +
+            data.name;
+
+
+        document.getElementById(
+            "targetCard"
+        ).classList.remove(
+            "hidden"
+        );
+
+
+        document.getElementById(
+            "targetsCard"
+        ).classList.remove(
+            "hidden"
+        );
+
+
+        document.getElementById(
+            "activityCard"
+        ).classList.remove(
+            "hidden"
+        );
+
+
+        loadTargets();
+
+
+    } catch (error) {
+
+        msg.textContent =
+            error.message;
+
+    }
+
 }
 
-async function addTarget(){
- try{
-  if(!accountId)throw Error("Login first.");
-  const d=await api("/api/targets",{method:"POST",
-   body:JSON.stringify({
-    account_id:accountId,
-    target:target.value.trim()
-   })});
-  targetMsg.textContent="Added "+d.display_name;
-  target.value="";
-  loadTargets();
- }catch(e){targetMsg.textContent=e.message}
+
+/* =================================================
+   ADD TARGET
+================================================= */
+
+async function addTarget() {
+
+    const input =
+        document.getElementById(
+            "target"
+        );
+
+
+    const msg =
+        document.getElementById(
+            "targetMsg"
+        );
+
+
+    const value =
+        input.value.trim();
+
+
+    if (!accountId) {
+
+        msg.textContent =
+            "Login first.";
+
+        return;
+
+    }
+
+
+    if (!value) {
+
+        msg.textContent =
+            "Enter a username or Telegram ID.";
+
+        return;
+
+    }
+
+
+    try {
+
+        msg.textContent =
+            "Resolving Telegram user...";
+
+
+        const data =
+            await api(
+                "/api/targets",
+                {
+                    method: "POST",
+
+                    body: JSON.stringify({
+
+                        account_id:
+                            accountId,
+
+                        target:
+                            value
+
+                    })
+                }
+            );
+
+
+        msg.textContent =
+            "Added " +
+            data.display_name;
+
+
+        input.value = "";
+
+
+        loadTargets();
+
+
+    } catch (error) {
+
+        msg.textContent =
+            error.message;
+
+    }
+
 }
 
-async function loadTargets(){
- if(!accountId)return;
- const list=await api("/api/targets/"+accountId);
- targets.innerHTML="";
- if(!list.length){targets.textContent="No targets.";return}
- list.forEach(t=>{
-  const el=document.createElement("div");
-  el.className="item";
-  el.innerHTML="<b>"+esc(t.display_name)+"</b><br><span class='small'>"+
-    esc(t.username?"@"+t.username:String(t.telegram_id))+"</span>";
-  el.onclick=()=>showActivity(t.id);
-  targets.appendChild(el);
- });
+
+/* =================================================
+   LOAD TARGETS
+================================================= */
+
+async function loadTargets() {
+
+    if (!accountId) {
+        return;
+    }
+
+
+    try {
+
+        const list =
+            await api(
+                "/api/targets/" +
+                accountId
+            );
+
+
+        const container =
+            document.getElementById(
+                "targets"
+            );
+
+
+        container.innerHTML = "";
+
+
+        if (!list.length) {
+
+            container.textContent =
+                "No targets added yet.";
+
+            return;
+
+        }
+
+
+        list.forEach(
+            target => {
+
+                const element =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                element.className =
+                    "item";
+
+
+                const username =
+                    target.username
+                    ? "@" +
+                      target.username
+                    : String(
+                        target.telegram_id
+                    );
+
+
+                element.innerHTML =
+                    "<b>" +
+                    esc(
+                        target.display_name
+                    ) +
+                    "</b>" +
+                    "<br>" +
+                    "<span class='small'>" +
+                    esc(username) +
+                    "</span>";
+
+
+                element.onclick =
+                    () => {
+
+                        showActivity(
+                            target.id
+                        );
+
+                    };
+
+
+                container.appendChild(
+                    element
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        document.getElementById(
+            "targets"
+        ).textContent =
+            error.message;
+
+    }
+
 }
 
-async function showActivity(id){
- selected=id;
- const d=await api("/api/activity/"+id);
- if(!d.events.length){
-  activity.textContent="No observations yet.";
-  return;
- }
- activity.innerHTML=d.events.map(e=>
-  "<div class='item'><b class='"+(e.status==="ONLINE"?"online":"offline")+"'>"+
-  esc(e.status)+"</b><br><span class='small'>Observed: "+
-  esc(e.observed_at)+"</span>"+
-  (e.telegram_time?"<br><span class='small'>Telegram: "+
-   esc(e.telegram_time)+"</span>":"")+"</div>"
- ).join("");
+
+/* =================================================
+   SHOW ACTIVITY
+================================================= */
+
+async function showActivity(id) {
+
+    selected = id;
+
+
+    const activity =
+        document.getElementById(
+            "activity"
+        );
+
+
+    const title =
+        document.getElementById(
+            "activityTitle"
+        );
+
+
+    activity.innerHTML =
+        "Loading...";
+
+
+    try {
+
+        const data =
+            await api(
+                "/api/activity/" +
+                id
+            );
+
+
+        title.textContent =
+            "Activity — " +
+            data.target.display_name;
+
+
+        if (!data.events.length) {
+
+            activity.textContent =
+                "No observations yet.";
+
+            return;
+
+        }
+
+
+        activity.innerHTML = "";
+
+
+        data.events.forEach(
+            event => {
+
+                const element =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                element.className =
+                    "item";
+
+
+                const statusClass =
+                    event.status ===
+                    "ONLINE"
+                    ? "online"
+                    : "offline";
+
+
+                element.innerHTML =
+
+                    "<div class='status " +
+                    statusClass +
+                    "'>" +
+                    esc(event.status) +
+                    "</div>" +
+
+                    "<span class='small'>" +
+                    "Observed: " +
+                    esc(event.observed_at) +
+                    "</span>" +
+
+                    (
+                        event.telegram_time
+                        ? "<br><span class='small'>" +
+                          "Telegram time: " +
+                          esc(
+                              event.telegram_time
+                          ) +
+                          "</span>"
+                        : ""
+                    );
+
+
+                activity.appendChild(
+                    element
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        activity.textContent =
+            error.message;
+
+    }
+
 }
 
-function esc(s){
- return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
- ">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+
+/* =================================================
+   ESCAPE HTML
+================================================= */
+
+function esc(value) {
+
+    return String(value)
+        .replace(
+            /[&<>"']/g,
+            function(char) {
+
+                return {
+
+                    "&":
+                        "&amp;",
+
+                    "<":
+                        "&lt;",
+
+                    ">":
+                        "&gt;",
+
+                    '"':
+                        "&quot;",
+
+                    "'":
+                        "&#039;"
+
+                }[char];
+
+            }
+        );
+
 }
 
-setInterval(()=>{if(accountId)loadTargets();if(selected)showActivity(selected)},5000);
+
+/* =================================================
+   AUTO REFRESH
+================================================= */
+
+setInterval(
+    function() {
+
+        if (accountId) {
+
+            loadTargets();
+
+        }
+
+
+        if (selected) {
+
+            showActivity(
+                selected
+            );
+
+        }
+
+    },
+    5000
+);
+
 </script>
+
 </body>
 </html>
