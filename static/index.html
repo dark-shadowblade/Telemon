@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Telegram Activity Monitor</title>
+<style>
+body{margin:0;background:#07090d;color:#f2f4f7;font:15px Arial}
+main{max-width:900px;margin:auto;padding:25px 15px}
+.card{background:#10141b;border:1px solid #222a35;border-radius:15px;padding:18px;margin:12px 0}
+input,button{width:100%;padding:12px;margin-top:7px;border-radius:9px;border:1px solid #303947;background:#0b0f15;color:white;box-sizing:border-box}
+button{background:#176ea8;cursor:pointer}
+.item{padding:13px;margin:7px 0;background:#0b0f15;border-radius:10px;cursor:pointer}
+.small{color:#8993a1;font-size:12px}
+.online{color:#27e27b}.offline{color:#ff4f5c}
+</style>
+</head>
+<body>
+<main>
+<h1>Telegram Activity Monitor</h1>
+<p class="small">Uses only activity visible to the authorized Telegram account.</p>
+
+<div class="card">
+<h3>Telegram Login</h3>
+<input id="phone" placeholder="+91XXXXXXXXXX">
+<button onclick="startLogin()">Send Code</button>
+<div id="login2" style="display:none">
+<input id="code" placeholder="Telegram code">
+<input id="password" type="password" placeholder="2FA password (if enabled)">
+<button onclick="finishLogin()">Login</button>
+</div>
+<p id="loginMsg" class="small"></p>
+</div>
+
+<div class="card">
+<h3>Add Target</h3>
+<input id="target" placeholder="@username or Telegram ID">
+<button onclick="addTarget()">Add Target</button>
+<p id="targetMsg" class="small"></p>
+</div>
+
+<div class="card">
+<h3>Targets</h3>
+<div id="targets">Login first.</div>
+</div>
+
+<div class="card">
+<h3>Activity</h3>
+<div id="activity">Select a target.</div>
+</div>
+</main>
+
+<script>
+let loginId=null,accountId=null,selected=null;
+
+async function api(url,opt={}){
+ const r=await fetch(url,{cache:"no-store",...opt,
+   headers:{"Content-Type":"application/json",...(opt.headers||{})}});
+ const text=await r.text();
+ let d; try{d=JSON.parse(text)}catch{d={detail:text}}
+ if(!r.ok)throw Error(d.detail||"Request failed");
+ return d;
+}
+
+async function startLogin(){
+ try{
+  const d=await api("/api/login/start",{method:"POST",
+   body:JSON.stringify({phone:phone.value.trim()})});
+  loginId=d.login_id;
+  login2.style.display="block";
+  loginMsg.textContent=d.message;
+ }catch(e){loginMsg.textContent=e.message}
+}
+
+async function finishLogin(){
+ try{
+  const d=await api("/api/login/finish",{method:"POST",
+   body:JSON.stringify({
+    login_id:loginId,
+    code:code.value.trim(),
+    password:password.value
+   })});
+  if(d.needs_password){
+   loginMsg.textContent="Enter your 2FA password.";
+   return;
+  }
+  accountId=d.account_id;
+  loginMsg.textContent="Logged in: "+d.name;
+  loadTargets();
+ }catch(e){loginMsg.textContent=e.message}
+}
+
+async function addTarget(){
+ try{
+  if(!accountId)throw Error("Login first.");
+  const d=await api("/api/targets",{method:"POST",
+   body:JSON.stringify({
+    account_id:accountId,
+    target:target.value.trim()
+   })});
+  targetMsg.textContent="Added "+d.display_name;
+  target.value="";
+  loadTargets();
+ }catch(e){targetMsg.textContent=e.message}
+}
+
+async function loadTargets(){
+ if(!accountId)return;
+ const list=await api("/api/targets/"+accountId);
+ targets.innerHTML="";
+ if(!list.length){targets.textContent="No targets.";return}
+ list.forEach(t=>{
+  const el=document.createElement("div");
+  el.className="item";
+  el.innerHTML="<b>"+esc(t.display_name)+"</b><br><span class='small'>"+
+    esc(t.username?"@"+t.username:String(t.telegram_id))+"</span>";
+  el.onclick=()=>showActivity(t.id);
+  targets.appendChild(el);
+ });
+}
+
+async function showActivity(id){
+ selected=id;
+ const d=await api("/api/activity/"+id);
+ if(!d.events.length){
+  activity.textContent="No observations yet.";
+  return;
+ }
+ activity.innerHTML=d.events.map(e=>
+  "<div class='item'><b class='"+(e.status==="ONLINE"?"online":"offline")+"'>"+
+  esc(e.status)+"</b><br><span class='small'>Observed: "+
+  esc(e.observed_at)+"</span>"+
+  (e.telegram_time?"<br><span class='small'>Telegram: "+
+   esc(e.telegram_time)+"</span>":"")+"</div>"
+ ).join("");
+}
+
+function esc(s){
+ return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
+ ">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+setInterval(()=>{if(accountId)loadTargets();if(selected)showActivity(selected)},5000);
+</script>
+</body>
+</html>
